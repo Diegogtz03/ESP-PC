@@ -7,8 +7,8 @@
 #define JSON_DOC_SIZE 2048
 #define MSG_SIZE 128
 
-#define PC_SWITCH_PIN D0 // D0
-#define PC_LIGHT_PIN A0 // D1
+#define PC_SWITCH_PIN D0
+#define PC_LIGHT_PIN A0
 
 WebSocketsClient wsClient;
 
@@ -36,43 +36,38 @@ void interpretPayload(uint8_t * payload) {
   }
 
   if (strcmp(doc["msg"], "CHECK STATE") == 0) {
-    // CHECK PIN MODE RETURN THAT
-    Serial.println("LIGHT V:");
+    // CHECK PIN MODE AND RETURN --> "OFF" or "ON" 
     int lightV = analogRead(PC_LIGHT_PIN);
-    Serial.println(analogRead(PC_LIGHT_PIN));
     char msg[MSG_SIZE];
 
-    if (lightV < 10) {
+    if (lightV < 300) {
       sprintf(msg, "{\"msg\":\"%s\"}", "OFF");
     } else {
       sprintf(msg, "{\"msg\":\"%s\"}", "ON");
     }
     
     wsClient.sendTXT(msg);
-
-    // pinMode(doc["body"]["pin"])
   } else if (strcmp(doc["msg"], "ON") == 0) {
     // Check that PC is not powered on, if so, do nothing
     int lightV = analogRead(PC_LIGHT_PIN);
 
-    if (lightV < 10) {
+    if (lightV < 300) {
       // PC OFF --> PC ON
+      Serial.println("POWER ON");
       digitalWrite(PC_SWITCH_PIN, HIGH);
-      delay(150);
+      delay(400);
       digitalWrite(PC_SWITCH_PIN, LOW);
     }
-
-    Serial.println("RECIEVED ON");
   } else if (strcmp(doc["msg"], "OFF") == 0) {
     // Check that PC is not powered off, if so, do nothing
     int lightV = analogRead(PC_LIGHT_PIN);
 
-    if (lightV > 10) {
+    if (lightV >= 300) {
+      Serial.println("POWER OFF");
       // PC ON --> PC OFF
       digitalWrite(PC_SWITCH_PIN, HIGH);
-      delay(150);
+      delay(4500);
       digitalWrite(PC_SWITCH_PIN, LOW);
-      Serial.println("RECIEVED OFF");
     }
   }
 }
@@ -86,10 +81,7 @@ void onEvent(WStype_t type, uint8_t * payload, size_t length) {
       Serial.println("WS Disconnected");
       break;
     case WStype_TEXT:
-      Serial.printf("WS Message: %s\n", payload);
-
       interpretPayload(payload);
-
       break;
   }
 }
@@ -97,7 +89,7 @@ void onEvent(WStype_t type, uint8_t * payload, size_t length) {
 void setup() {
   Serial.begin(115200);
 
-  // Begin WiFi connections
+  // Begin WiFi connection
   WiFi.begin(WIFI_SSID, WIFI_PASSWORD);
 
   while(WiFi.status() != WL_CONNECTED) {
@@ -109,8 +101,9 @@ void setup() {
 
   pinMode(PC_LIGHT_PIN, INPUT);
   pinMode(PC_SWITCH_PIN, OUTPUT);
+  digitalWrite(PC_SWITCH_PIN, LOW);
 
-  wsClient.begin(WS_HOST, WS_PORT, WS_URL);
+  wsClient.beginSSL(WS_HOST, WS_PORT, WS_URL);
   wsClient.onEvent(onEvent);
 }
 
