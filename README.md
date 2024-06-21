@@ -8,14 +8,13 @@ power on my PC and be able to remotely access it via **Parsec** or **MRD**.
 - 1 ESP8266
 - 1 USB to MicroUSB to power the ESP
 - 1 330Ω Resistance
-- 1 100KΩ Resistance
-- 1 200KΩ Resistance
+- 1 5KΩ Resistance
+- 1 10KΩ Resistance
 - 1 4N25 Octocoupler
 - Some cables
 
 ## Schematics
-
-In progress...
+<img width="1085" alt="Screenshot 2024-06-20 at 11 20 17 p m" src="https://github.com/Diegogtz03/ESP-PC/assets/65473367/4783a24b-e51c-45a6-aca4-1258c1375205">
 
 ## Code Notes
 - A **secrets.h** file needs to be created within **/include** which should contain the following:
