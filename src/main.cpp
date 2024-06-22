@@ -24,8 +24,6 @@ void interpretPayload(uint8_t * payload) {
   DeserializationError error = deserializeJson(doc, payload);
 
   if (error) {
-    Serial.print("deserialize failed");
-    Serial.println(error.f_str());
     handleErrorMessage(error.c_str());
     return;
   }
@@ -53,7 +51,6 @@ void interpretPayload(uint8_t * payload) {
 
     if (lightV < 300) {
       // PC OFF --> PC ON
-      Serial.println("POWER ON");
       digitalWrite(PC_SWITCH_PIN, HIGH);
       delay(400);
       digitalWrite(PC_SWITCH_PIN, LOW);
@@ -63,10 +60,9 @@ void interpretPayload(uint8_t * payload) {
     int lightV = analogRead(PC_LIGHT_PIN);
 
     if (lightV >= 300) {
-      Serial.println("POWER OFF");
       // PC ON --> PC OFF
       digitalWrite(PC_SWITCH_PIN, HIGH);
-      delay(4500);
+      delay(400);
       digitalWrite(PC_SWITCH_PIN, LOW);
     }
   }
@@ -74,12 +70,6 @@ void interpretPayload(uint8_t * payload) {
 
 void onEvent(WStype_t type, uint8_t * payload, size_t length) {
   switch (type) {
-    case WStype_CONNECTED:
-      Serial.println("WS Connected");
-      break;
-    case WStype_DISCONNECTED:
-      Serial.println("WS Disconnected");
-      break;
     case WStype_TEXT:
       interpretPayload(payload);
       break;
@@ -94,10 +84,7 @@ void setup() {
 
   while(WiFi.status() != WL_CONNECTED) {
     delay(1000);
-    Serial.print(".");
   }
-
-  Serial.println("CONNECTED TO WIFI!");
 
   pinMode(PC_LIGHT_PIN, INPUT);
   pinMode(PC_SWITCH_PIN, OUTPUT);
@@ -108,5 +95,14 @@ void setup() {
 }
 
 void loop() {
-  wsClient.loop();
+  if (WiFi.status() == WL_CONNECTED) {
+    wsClient.loop();
+  } else {
+    WiFi.begin(WIFI_SSID, WIFI_PASSWORD);
+
+    while(WiFi.status() != WL_CONNECTED) {
+      delay(1000);
+      Serial.print(".");
+    }
+  }
 }
